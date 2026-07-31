@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cine & Dates</title>
+  
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & Supabase CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: 'Nunito', sans-serif;" class="bg-slate-950 text-white min-h-screen">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+    const { createClient } = supabase;
+
+    const supabaseClient = createClient(
+      'https://wdvmxjokidsjvxapoazc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkdm14am9raWRzanZ4YXBvYXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzOTQzNjQsImV4cCI6MjEwMDk3MDM2NH0.3j6TNh489JSUhItLCUJFJpTm7ImXvCjE_7-3Rc4UTxQ'
+    );
+
+    const BG_PRESETS = [
+      { id: 'bokeh', label: 'Bokeh', url: 'https://images.unsplash.com/photo-1628297956232-efd1c9a9b7a8?w=1400&h=900&fit=crop&auto=format' },
+      { id: 'candle', label: 'Vela', url: 'https://images.unsplash.com/photo-1514436598301-27a65f40469f?w=1400&h=900&fit=crop&auto=format' },
+      { id: 'sunset', label: 'Pôr do Sol', url: 'https://images.unsplash.com/photo-1496433998859-da21e208bd42?w=1400&h=900&fit=crop&auto=format' },
+      { id: 'couple', label: 'Casal', url: 'https://images.unsplash.com/photo-1615966650071-855b15f29ad1?w=1400&h=900&fit=crop&auto=format' },
+      { id: 'fire', label: 'Lareira', url: 'https://images.unsplash.com/photo-1579761804843-f997ade7fa35?w=1400&h=900&fit=crop&auto=format' },
+      { id: 'none', label: 'Sem fundo', url: '' },
+    ];
+
+    const COLOR_PRESETS = [
+      { id: 'violet', label: 'Violeta', accent: '#8b5cf6', soft: 'rgba(139,92,246,0.18)', ring: 'rgba(139,92,246,0.4)' },
+      { id: 'garnet', label: 'Granada', accent: '#e11d48', soft: 'rgba(225,29,72,0.18)', ring: 'rgba(225,29,72,0.4)' },
+      { id: 'amber', label: 'Âmbar', accent: '#d97706', soft: 'rgba(217,119,6,0.18)', ring: 'rgba(217,119,6,0.4)' },
+      { id: 'teal', label: 'Esmeralda', accent: '#0d9488', soft: 'rgba(13,148,136,0.18)', ring: 'rgba(13,148,136,0.4)' },
+      { id: 'rose', label: 'Rosa', accent: '#f43f5e', soft: 'rgba(244,63,94,0.18)', ring: 'rgba(244,63,94,0.4)' },
+      { id: 'indigo', label: 'Índigo', accent: '#4f46e5', soft: 'rgba(79,70,229,0.18)', ring: 'rgba(79,70,229,0.4)' },
+    ];
+
+    const TABS = [
+      { id: 'filmes', icon: '🎬', label: 'Filmes' },
+      { id: 'comidas', icon: '🍕', label: 'Comidas' },
+      { id: 'dates', icon: '✨', label: 'Dates' },
+      { id: 'conexao', icon: '🤍', label: 'Nosso Par' },
+      { id: 'estilo', icon: '🎨', label: 'Estilo' },
+    ];
+
+    function App() {
+      const [modoLogin, setModoLogin] = useState(true);
+      const [logado, setLogado] = useState(false);
+      const [nomeUsuario, setNomeUsuario] = useState('');
+      const [codigoCasal, setCodigoCasal] = useState('');
+      const [aba, setAba] = useState('filmes');
+
+      const [email, setEmail] = useState('');
+      const [senha, setSenha] = useState('');
+      const [nome, setNome] = useState('');
+      const [telefone, setTelefone] = useState('');
+      const [codigoInput, setCodigoInput] = useState('');
+
+      const [dados, setDados] = useState({ filmes: [], comidas: [], dates: [] });
+      const [loading, setLoading] = useState(false);
+      const [toast, setToast] = useState(null);
+      const [addOpen, setAddOpen] = useState(false);
+      const [addText, setAddText] = useState('');
+      const addRef = useRef(null);
+
+      const [bgPreset, setBgPreset] = useState('bokeh');
+      const [bgCustomUrl, setBgCustomUrl] = useState('');
+      const [colorId, setColorId] = useState('violet');
+      const bgFileRef = useRef(null);
+
+      const color = COLOR_PRESETS.find(c => c.id === colorId) || COLOR_PRESETS[0];
+      const currentBg = bgCustomUrl || BG_PRESETS.find(b => b.id === bgPreset)?.url || '';
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      useEffect(() => {
+        if (addOpen) setTimeout(() => addRef.current?.focus(), 80);
+      }, [addOpen]);
+
+      const auth = async () => {
+        if (!email || !senha) return showToast('Preencha e-mail e senha!');
+        setLoading(true);
+        try {
+          if (!modoLogin) {
+            if (!nome) return showToast('Digite seu nome!');
+            const { error } = await supabaseClient.from('Usuarios').insert([{ nome, email, telefone, senha }]);
+            if (error) { showToast(`Erro: ${error.message}`); return; }
+            setNomeUsuario(nome);
+            showToast(`Bem-vindo(a), ${nome}! 🎉`);
+          } else {
+            const { data, error } = await supabaseClient.from('Usuarios').select('*').eq('email', email).eq('senha', senha).maybeSingle();
+            if (error || !data) { showToast('E-mail ou senha incorretos!'); return; }
+            setNomeUsuario(data.nome);
+            showToast(`Olá de volta, ${data.nome}! 💕`);
+          }
+          setLogado(true);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const gerarCodigo = async () => {
+        const codigo = 'AMOR-' + Math.floor(1000 + Math.random() * 9000);
+        const { error } = await supabaseClient.from('App_Casal').insert([{ codigo_casal: codigo, filmes: [], comidas: [], dates: [] }]);
+        if (error) { showToast(`Erro: ${error.message}`); return; }
+        setCodigoCasal(codigo);
+        escutarDados(codigo);
+        showToast('Código gerado! 🗝️');
+      };
+
+      const vincular = async () => {
+        const c = codigoInput.trim().toUpperCase();
+        if (!c) return showToast('Digite o código!');
+        setCodigoCasal(c);
+        escutarDados(c);
+        showToast(`Conectado ao código ${c}! 🎉`);
+      };
+
+      const escutarDados = (codigo) => {
+        carregarDados(codigo);
+        supabaseClient.channel('mudancas_casal').on('postgres_changes', {
+          event: '*', schema: 'public', table: 'App_Casal', filter: `codigo_casal=eq.${codigo}`
+        }, payload => { if (payload.new) setDados(payload.new) }).subscribe();
+      };
+
+      const carregarDados = async (codigo) => {
+        const { data } = await supabaseClient.from('App_Casal').select('*').eq('codigo_casal', codigo).single();
+        if (data) setDados(data);
+      };
+
+      const saveItem = async () => {
+        if (!addText.trim()) return;
+        if (!codigoCasal) { showToast("Conecte-se na aba 'Nosso Par' primeiro!"); return; }
+        const lista = [...(dados[aba] || []), { texto: addText.trim(), autor: nomeUsuario }];
+        await supabaseClient.from('App_Casal').update({ [aba]: lista }).eq('codigo_casal', codigoCasal);
+        setAddText('');
+        setAddOpen(false);
+      };
+
+      const removeItem = async (index) => {
+        if (!codigoCasal) return;
+        const lista = (dados[aba] || []).filter((_, i) => i !== index);
+        await supabaseClient.from('App_Casal').update({ [aba]: lista }).eq('codigo_casal', codigoCasal);
+        showToast('Item removido!');
+      };
+
+      const listForTab = (t) => dados[t] || [];
+      const emojiFor = (t) => t === 'filmes' ? '🎬' : t === 'comidas' ? '🍕' : '✨';
+      const glass = 'rgba(12,6,22,0.65)';
+      const border = '1px solid rgba(255,255,255,0.12)';
+
+      return (
+        <div className="relative min-h-screen overflow-hidden">
+          {/* Background */}
+          <div className="fixed inset-0 z-0 bg-cover bg-center transition-all duration-300" 
+               style={{ backgroundImage: currentBg ? `url(${currentBg})` : 'linear-gradient(160deg,#0f0a1e 0%,#1a0d2e 60%,#0d1a2e 100%)' }} />
+          <div className="fixed inset-0 z-1" style={{ background: currentBg ? 'rgba(8,4,18,0.72)' : 'transparent' }} />
+
+          {/* Toast */}
+          {toast && (
+            <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-5 py-2 rounded-full text-sm font-semibold border shadow-2xl backdrop-blur-md"
+                 style={{ background: glass, borderColor: color.ring, color: '#f0eaff' }}>
+              {toast}
+            </div>
+          )}
+
+          {/* Auth */}
+          {!logado ? (
+            <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'Lora, serif' }}>Cine & Dates</h1>
+                <p className="text-white/40 italic text-sm mt-2" style={{ fontFamily: 'Lora, serif' }}>Nosso cantinho para planejar juntos</p>
+              </div>
+
+              <div className="w-full max-w-md p-7 rounded-3xl border backdrop-blur-xl shadow-2xl space-y-4"
+                   style={{ background: glass, borderColor: 'rgba(255,255,255,0.12)' }}>
+                <h2 className="text-lg font-semibold text-center text-purple-100" style={{ fontFamily: 'Lora, serif' }}>
+                  {modoLogin ? 'Entrar na Conta' : 'Criar Nova Conta'}
+                </h2>
+
+                {!modoLogin && (
+                  <>
+                    <input className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:border-purple-500"
+                           placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} />
+                    <input className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:border-purple-500"
+                           placeholder="WhatsApp" value={telefone} onChange={e => setTelefone(e.target.value)} />
+                  </>
+                )}
+                <input className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:border-purple-500"
+                       type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} />
+                <input className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:border-purple-500"
+                       type="password" placeholder="Senha" value={senha} onChange={e => setSenha(e.target.value)} />
+
+                <button onClick={auth} disabled={loading}
+                        className="w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95"
+                        style={{ background: `linear-gradient(135deg, ${color.accent}, ${color.accent}bb)` }}>
+                  {loading ? '...' : modoLogin ? 'Entrar' : 'Criar Conta'}
+                </button>
+
+                <p className="text-center text-xs text-white/40">
+                  {modoLogin ? 'Ainda não tem conta? ' : 'Já tem conta? '}
+                  <button onClick={() => setModoLogin(!modoLogin)} className="font-bold underline" style={{ color: color.accent }}>
+                    {modoLogin ? 'Cadastrar' : 'Entrar'}
+                  </button>
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* App Principal */
+            <div className="relative z-10 flex flex-col min-h-screen">
+              <header className="p-5 flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Lora, serif' }}>
+                    {TABS.find(t => t.id === aba)?.icon} {TABS.find(t => t.id === aba)?.label}
+                  </h1>
+                  <p className="text-xs text-white/40 italic" style={{ fontFamily: 'Lora, serif' }}>
+                    {nomeUsuario} {codigoCasal ? `· ${codigoCasal}` : ''}
+                  </p>
+                </div>
+              </header>
+
+              <main className="flex-1 px-4 pb-28 overflow-y-auto">
+                {['filmes', 'comidas', 'dates'].includes(aba) && (
+                  <div className="space-y-3">
+                    {listForTab(aba).length === 0 ? (
+                      <p className="text-center text-white/30 italic py-12">Nenhum item adicionado ainda... 💕</p>
+                    ) : (
+                      listForTab(aba).map((item, i) => (
+                        <div key={i} className="flex justify-between items-center p-4 rounded-xl border backdrop-blur-md"
+                             style={{ background: glass, borderColor: 'rgba(255,255,255,0.12)', borderLeft: `4px solid ${color.accent}` }}>
+                          <div>
+                            <p className="font-semibold text-white">{item.texto}</p>
+                            <span className="text-xs opacity-75" style={{ color: color.accent }}>sugerido por {item.autor}</span>
+                          </div>
+                          <button onClick={() => removeItem(i)} className="text-white/30 hover:text-red-500 font-bold px-2">✕</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {aba === 'conexao' && (
+                  <div className="space-y-4 text-center">
+                    <div className="p-6 rounded-2xl border backdrop-blur-md" style={{ background: glass, borderColor: color.ring }}>
+                      <p className="text-xs text-white/40 uppercase tracking-widest">Sua Chave</p>
+                      <h2 className="text-3xl font-bold my-3 tracking-widest" style={{ color: color.accent }}>{codigoCasal || '----'}</h2>
+                      <button onClick={gerarCodigo} className="w-full py-3 rounded-xl font-bold text-white shadow-lg" style={{ background: color.accent }}>
+                        Gerar Código 🗝️
+                      </button>
+                    </div>
+
+                    <div className="p-6 rounded-2xl border backdrop-blur-md" style={{ background: glass, borderColor: 'rgba(255,255,255,0.12)' }}>
+                      <p className="text-xs text-white/40 uppercase tracking-widest mb-3">Conectar com seu amor</p>
+                      <div className="flex gap-2">
+                        <input className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none"
+                               placeholder="Ex: AMOR-1234" value={codigoInput} onChange={e => setCodigoInput(e.target.value)} />
+                        <button onClick={vincular} className="px-4 py-2 rounded-xl font-bold text-white" style={{ background: color.accent }}>
+                          Vincular
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </main>
+
+              {/* Botão Flutuante (+) */}
+              {['filmes', 'comidas', 'dates'].includes(aba) && (
+                <button onClick={() => setAddOpen(true)}
+                        className="fixed bottom-20 right-5 z-40 w-14 h-14 rounded-full text-2xl font-bold text-white shadow-xl flex items-center justify-center active:scale-90 transition-transform"
+                        style={{ background: color.accent }}>
+                  +
+                </button>
+              )}
+
+              {/* Bottom Nav */}
+              <nav className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/80 backdrop-blur-xl border-t border-white/10 flex justify-around p-3">
+                {TABS.map(t => (
+                  <button key={t.id} onClick={() => setAba(t.id)} className="flex flex-col items-center gap-1">
+                    <span className="text-xl">{t.icon}</span>
+                    <span className={`text-[10px] font-bold ${aba === t.id ? 'text-white' : 'text-white/30'}`}>{t.label}</span>
+                  </button>
+                ))}
+              </nav>
+
+              {/* Modal de Adição */}
+              {addOpen && (
+                <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
+                  <div className="w-full p-6 rounded-t-3xl bg-slate-900 border-t border-white/10 space-y-4">
+                    <h3 className="font-semibold text-lg text-white">{emojiFor(aba)} Adicionar em {aba}</h3>
+                    <input ref={addRef} value={addText} onChange={e => setAddText(e.target.value)}
+                           placeholder="Digite a sugestão..."
+                           className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white outline-none" />
+                    <div className="flex gap-3">
+                      <button onClick={() => setAddOpen(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-white/50 font-semibold">Cancelar</button>
+                      <button onClick={saveItem} className="flex-2 flex-grow py-3 rounded-xl text-white font-bold" style={{ background: color.accent }}>Salvar</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
