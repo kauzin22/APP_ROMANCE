@@ -1,17 +1,681 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>App Romance</title>
-    
-    <!-- Link para o CSS gerado na pasta assets -->
-    <link rel="stylesheet" crossorigin href="./assets/NOME_DO_SEU_ARQUIVO.css" />
-  </head>
-  <body>
-    <div id="root"></div>
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0c1324" />
+  <title>Cine & Dates - Private Sanctuary</title>
+  
+  <!-- Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
-    <!-- Script para o JS gerado na pasta assets -->
-    <script type="module" crossorigin src="./assets/NOME_DO_SEU_ARQUIVO.js"></script>
-  </body>
+  <!-- Tailwind CSS & React CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#33394c",
+            "primary-fixed-dim": "#d0bcff",
+            "surface-container": "#191f31",
+            "secondary-fixed": "#ffdadb",
+            "surface-container-low": "#151b2d",
+            "background": "#0c1324",
+            "secondary-fixed-dim": "#ffb2b7",
+            "surface": "#0c1324",
+            "surface-dim": "#0c1324",
+            "surface-variant": "#2e3447",
+            "tertiary": "#c3c0ff",
+            "secondary": "#ffb2b7",
+            "primary": "#d0bcff",
+            "primary-container": "#a078ff",
+            "secondary-container": "#b50036",
+            "surface-container-highest": "#2e3447",
+            "on-surface": "#dce1fb",
+            "on-surface-variant": "#cbc3d7"
+          },
+          fontFamily: {
+            headline: ["Literata", "serif"],
+            body: ["Nunito Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      background-color: #0c1324;
+      color: #dce1fb;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Literata', serif;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-hover:hover {
+      background: rgba(101, 56, 4, 0.07);
+      border-color: rgba(208, 188, 255, 0.2);
+    }
+
+    .bokeh-bg {
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(160, 120, 255, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 65%, rgba(255, 178, 183, 0.12) 0%, transparent 45%),
+        #0c1324;
+    }
+
+    .primary-glow {
+      box-shadow: 0 10px 25px -5px rgba(160, 120, 255, 0.35);
+    }
+
+    .rose-glow {
+      box-shadow: 0 0 15px rgba(255, 178, 183, 0.25);
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1;
+    }
+  </style>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bokeh-bg min-h-screen text-on-surface select-none">
+
+  <div id="root"></div>
+
+  <script>
+    const { useState, useEffect, useRef, createElement: h } = React;
+    const { createClient } = supabase;
+
+    // Configuração do Supabase
+    const supabaseClient = createClient(
+      'https://wdvmxjokidsjvxapoazc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkdm14am9raWRzanZ4YXBvYXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzOTQzNjQsImV4cCI6MjEwMDk3MDM2NH0.3j6TNh489JSUhItLCUJFJpTm7ImXvCjE_7-3Rc4UTxQ'
+    );
+
+    const QUIZ_OPTIONS = {
+      filmes: ['Ação / Aventura', 'Comédia Romântica', 'Terror / Suspense', 'Animes / Animação', 'Ficção Científica', 'Séries / Maratona'],
+      comidas: ['Pizza', 'Japonesa / Sushi', 'Hambúrguer Artesanal', 'Massa / Italiano', 'Comida Caseira', 'Doces / Açaí'],
+      dates: ['Jantar Romântico', 'Piquenique ao Ar Livre', 'Cinema & Pipoca', 'Passeio na Praia', 'Jogar / Ficar em Casa', 'Viajar no Fim de Semana']
+    };
+
+    const TABS = [
+      { id: 'match', icon: 'favorite', label: 'Match' },
+      { id: 'chat', icon: 'chat', label: 'Chat' },
+      { id: 'filmes', icon: 'movie', label: 'Filmes' },
+      { id: 'comidas', icon: 'restaurant', label: 'Comidas' },
+      { id: 'dates', icon: 'auto_awesome', label: 'Dates' },
+      { id: 'conexao', icon: 'favorite_border', label: 'Nosso Par' }
+    ];
+
+    function App() {
+      const [modoLogin, setModoLogin] = useState('login'); // 'login' | 'cadastro' | 'esqueci'
+      const [logado, setLogado] = useState(false);
+      const [emQuiz, setEmQuiz] = useState(false);
+      
+      const [nomeUsuario, setNomeUsuario] = useState('');
+      const [codigoCasal, setCodigoCasal] = useState(localStorage.getItem('codigoCasal') || '');
+      const [aba, setAba] = useState('match');
+
+      const [email, setEmail] = useState('');
+      const [senha, setSenha] = useState('');
+      const [novaSenha, setNovaSenha] = useState('');
+      const [nome, setNome] = useState('');
+      const [telefone, setTelefone] = useState('');
+      const [codigoInput, setCodigoInput] = useState('');
+
+      const [prefFilmes, setPrefFilmes] = useState([]);
+      const [prefComidas, setPrefComidas] = useState([]);
+      const [prefDates, setPrefDates] = useState([]);
+
+      const [dadosParceiro, setDadosParceiro] = useState(null);
+      const [nomeParceiro, setNomeParceiro] = useState('');
+      
+      // Estados do Chat
+      const [mensagens, setMensagens] = useState([]);
+      const [novaMensagem, setNovaMensagem] = useState('');
+      const chatScrollRef = useRef(null);
+
+      const [loading, setLoading] = useState(false);
+      const [toast, setToast] = useState(null);
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      const auth = async () => {
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanSenha = senha.trim();
+
+        if (!cleanEmail) return showToast('Preencha o e-mail!');
+        
+        if (modoLogin === 'esqueci') {
+          if (!novaSenha.trim()) return showToast('Digite a nova senha!');
+          setLoading(true);
+          try {
+            const { data, error } = await supabaseClient
+              .from('Usuarios')
+              .update({ senha: novaSenha.trim() })
+              .ilike('email', cleanEmail)
+              .select();
+
+            if (error || !data || data.length === 0) {
+              showToast('E-mail não encontrado!');
+            } else {
+              showToast('Senha alterada com sucesso! Faça login.');
+              setModoLogin('login');
+              setSenha('');
+              setNovaSenha('');
+            }
+          } finally {
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (!cleanSenha) return showToast('Preencha a senha!');
+        setLoading(true);
+
+        try {
+          if (modoLogin === 'cadastro') {
+            if (!nome) return showToast('Digite seu nome!');
+            const { error } = await supabaseClient
+              .from('Usuarios')
+              .insert([{ nome: nome.trim(), email: cleanEmail, telefone, senha: cleanSenha }]);
+            
+            if (error) { showToast(`Erro: ${error.message}`); return; }
+            setNomeUsuario(nome);
+            setEmQuiz(true);
+          } else {
+            const { data, error } = await supabaseClient
+              .from('Usuarios')
+              .select('*')
+              .ilike('email', cleanEmail)
+              .eq('senha', cleanSenha)
+              .maybeSingle();
+
+            if (error || !data) { showToast('E-mail ou senha incorretos!'); return; }
+            
+            setNomeUsuario(data.nome);
+            setEmail(data.email);
+            
+            if (data.preferencias) {
+              try {
+                const prefs = typeof data.preferencias === 'string' ? JSON.parse(data.preferencias) : data.preferencias;
+                setPrefFilmes(prefs.filmes || []);
+                setPrefComidas(prefs.comidas || []);
+                setPrefDates(prefs.dates || []);
+                setLogado(true);
+              } catch (e) {
+                setEmQuiz(true);
+              }
+            } else {
+              setEmQuiz(true);
+            }
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const salvarQuiz = async () => {
+        if (prefFilmes.length === 0 || prefComidas.length === 0 || prefDates.length === 0) {
+          return showToast('Selecione pelo menos 1 opção em cada categoria!');
+        }
+        const cleanEmail = email.trim().toLowerCase();
+        const minhasPrefs = { filmes: prefFilmes, comidas: prefComidas, dates: prefDates };
+        
+        const { error } = await supabaseClient
+          .from('Usuarios')
+          .update({ preferencias: JSON.stringify(minhasPrefs) })
+          .ilike('email', cleanEmail);
+
+        if (error) {
+          showToast(`Erro ao salvar: ${error.message}`);
+          return;
+        }
+
+        setEmQuiz(false);
+        setLogado(true);
+        showToast('Perfil de gostos salvo! 🌟');
+      };
+
+      const toggleSelection = (item, list, setList) => {
+        if (list.includes(item)) setList(list.filter(i => i !== item));
+        else setList([...list, item]);
+      };
+
+      const gerarCodigoCasal = async () => {
+        const cleanEmail = email.trim().toLowerCase();
+        const novoCodigo = 'AMOR-' + Math.floor(1000 + Math.random() * 9000);
+        
+        const { error } = await supabaseClient
+          .from('App_Casal')
+          .insert([{ codigo_casal: novoCodigo, user_1: cleanEmail }]);
+
+        if (error) {
+          showToast('Erro ao criar código de casal.');
+          return;
+        }
+
+        setCodigoCasal(novoCodigo);
+        localStorage.setItem('codigoCasal', novoCodigo);
+        showToast(`Código ${novoCodigo} criado! Compartilhe com seu amor.`);
+      };
+
+      const vincular = async () => {
+        const c = codigoInput.trim().toUpperCase();
+        const cleanEmail = email.trim().toLowerCase();
+        if (!c) return showToast('Digite o código!');
+
+        const { data: casal, error } = await supabaseClient
+          .from('App_Casal')
+          .select('*')
+          .eq('codigo_casal', c)
+          .maybeSingle();
+
+        if (error || !casal) {
+          return showToast('Código de casal inválido ou não encontrado!');
+        }
+
+        if (casal.user_1 !== cleanEmail && !casal.user_2) {
+          await supabaseClient
+            .from('App_Casal')
+            .update({ user_2: cleanEmail })
+            .eq('codigo_casal', c);
+        }
+
+        setCodigoCasal(c);
+        localStorage.setItem('codigoCasal', c);
+        await carregarDadosCasal(c);
+        showToast(`Conectados com sucesso! 🎉`);
+      };
+
+      const carregarDadosCasal = async (codigo) => {
+        if (!codigo || !email) return;
+        const cleanEmail = email.trim().toLowerCase();
+
+        const { data: casal } = await supabaseClient
+          .from('App_Casal')
+          .select('*')
+          .eq('codigo_casal', codigo)
+          .maybeSingle();
+
+        if (casal) {
+          const emailParceiro = casal.user_1 === cleanEmail ? casal.user_2 : casal.user_1;
+          
+          if (emailParceiro) {
+            const { data: parceiro } = await supabaseClient
+              .from('Usuarios')
+              .select('*')
+              .ilike('email', emailParceiro)
+              .maybeSingle();
+
+            if (parceiro) {
+              setNomeParceiro(parceiro.nome);
+              if (parceiro.preferencias) {
+                try {
+                  const prefsParceiro = typeof parceiro.preferencias === 'string' 
+                    ? JSON.parse(parceiro.preferencias) 
+                    : parceiro.preferencias;
+                  setDadosParceiro(prefsParceiro);
+                } catch (e) {}
+              }
+            }
+          }
+          carregarMensagens(codigo);
+        }
+      };
+
+      const carregarMensagens = async (codigo) => {
+        const { data } = await supabaseClient
+          .from('App_Mensagens')
+          .select('*')
+          .eq('codigo_casal', codigo)
+          .order('created_at', { ascending: true });
+        
+        if (data) setMensagens(data);
+      };
+
+      const enviarMensagem = async () => {
+        if (!novaMensagem.trim() || !codigoCasal) return;
+        const texto = novaMensagem.trim();
+        setNovaMensagem('');
+
+        const { error } = await supabaseClient
+          .from('App_Mensagens')
+          .insert([{ codigo_casal: codigoCasal, remetente: email.trim().toLowerCase(), nome_remetente: nomeUsuario, mensagem: texto }]);
+
+        if (error) {
+          showToast('Erro ao enviar mensagem.');
+        } else {
+          carregarMensagens(codigoCasal);
+        }
+      };
+
+      useEffect(() => {
+        if (codigoCasal && email) carregarDadosCasal(codigoCasal);
+      }, [codigoCasal, email]);
+
+      useEffect(() => {
+        if (!codigoCasal) return;
+
+        const channelCasal = supabaseClient
+          .channel('public:App_Casal_' + codigoCasal)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'App_Casal', filter: `codigo_casal=eq.${codigoCasal}` },
+            () => { carregarDadosCasal(codigoCasal); }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'App_Mensagens', filter: `codigo_casal=eq.${codigoCasal}` },
+            (payload) => {
+              setMensagens(prev => [...prev, payload.new]);
+            }
+          )
+          .subscribe();
+
+        return () => { supabaseClient.removeChannel(channelCasal); };
+      }, [codigoCasal, email]);
+
+      useEffect(() => {
+        if (aba === 'chat' && chatScrollRef.current) {
+          chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+        }
+      }, [mensagens, aba]);
+
+      const calcularMatches = (minhasOpcoes, opcoesParceiro) => {
+        if (!opcoesParceiro) return [];
+        return minhasOpcoes.filter(item => opcoesParceiro.includes(item));
+      };
+
+      return h('div', { className: 'relative min-h-screen flex flex-col items-center' },
+        toast && h('div', { className: 'fixed top-6 z-50 px-6 py-3 rounded-full text-sm font-semibold border border-primary/30 bg-surface-container/90 backdrop-blur-xl shadow-2xl text-primary animate-bounce' }, toast),
+
+        !logado && !emQuiz && h('div', { className: 'min-h-screen w-full flex flex-col items-center justify-center p-6 max-w-md mx-auto' },
+          h('div', { className: 'w-16 h-16 rounded-full border border-primary/30 flex items-center justify-center bg-surface-container-high shadow-xl mb-6' },
+            h('span', { className: 'material-symbols-outlined text-3xl text-primary filled' }, 'local_movies')
+          ),
+          h('h1', { className: 'text-3xl font-bold text-primary mb-1 tracking-tight text-center' }, 'Cine & Dates'),
+          h('p', { className: 'text-on-surface-variant text-sm mb-8 text-center' }, 'Descubra o match perfeito com seu amor'),
+          
+          h('div', { className: 'w-full glass rounded-3xl p-6 space-y-4 border border-white/10 shadow-2xl' },
+            modoLogin === 'cadastro' && h('div', null,
+              h('label', { className: 'text-xs text-on-surface-variant uppercase tracking-wider font-semibold block mb-1' }, 'Nome'),
+              h('input', { className: 'w-full px-4 py-3 rounded-2xl bg-surface-container-lowest border border-white/10 text-on-surface focus:outline-none focus:border-primary', placeholder: 'Seu Nome', value: nome, onChange: e => setNome(e.target.value) })
+            ),
+            h('div', null,
+              h('label', { className: 'text-xs text-on-surface-variant uppercase tracking-wider font-semibold block mb-1' }, 'E-mail'),
+              h('input', { className: 'w-full px-4 py-3 rounded-2xl bg-surface-container-lowest border border-white/10 text-on-surface focus:outline-none focus:border-primary', placeholder: 'seu@email.com', value: email, onChange: e => setEmail(e.target.value) })
+            ),
+            modoLogin !== 'esqueci' && h('div', null,
+              h('label', { className: 'text-xs text-on-surface-variant uppercase tracking-wider font-semibold block mb-1' }, 'Senha'),
+              h('input', { className: 'w-full px-4 py-3 rounded-2xl bg-surface-container-lowest border border-white/10 text-on-surface focus:outline-none focus:border-primary', type: 'password', placeholder: '••••••••', value: senha, onChange: e => setSenha(e.target.value) })
+            ),
+            modoLogin === 'esqueci' && h('div', null,
+              h('label', { className: 'text-xs text-on-surface-variant uppercase tracking-wider font-semibold block mb-1' }, 'Nova Senha'),
+              h('input', { className: 'w-full px-4 py-3 rounded-2xl bg-surface-container-lowest border border-white/10 text-on-surface focus:outline-none focus:border-primary', type: 'password', placeholder: 'Nova senha segura', value: novaSenha, onChange: e => setNovaSenha(e.target.value) })
+            ),
+            h('button', { onClick: auth, disabled: loading, className: 'w-full py-4 mt-2 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-bold rounded-2xl primary-glow active:scale-95 transition-all' },
+              loading ? 'Carregando...' : (modoLogin === 'login' ? 'Entrar' : modoLogin === 'cadastro' ? 'Continuar para o Quiz' : 'Redefinir Senha')
+            ),
+            h('div', { className: 'flex justify-between items-center text-xs text-on-surface-variant pt-2' },
+              modoLogin !== 'esqueci' ? h('button', { onClick: () => setModoLogin('esqueci'), className: 'hover:text-primary transition-colors' }, 'Esqueci a senha') : h('span', {}),
+              h('button', { onClick: () => setModoLogin(modoLogin === 'login' ? 'cadastro' : 'login'), className: 'underline text-primary hover:text-primary-fixed-dim' },
+                modoLogin === 'login' ? 'Criar nova conta' : 'Já tenho conta'
+              )
+            )
+          )
+        ),
+
+        emQuiz && h('div', { className: 'min-h-screen w-full max-w-md p-6 mx-auto flex flex-col space-y-6 pb-12 pt-8' },
+          h('div', { className: 'text-center' },
+            h('h2', { className: 'text-2xl font-bold text-primary' }, 'O que você gosta?'),
+            h('p', { className: 'text-xs text-on-surface-variant mt-1' }, 'Selecione suas preferências para combinarmos com o seu amor!')
+          ),
+          h('div', { className: 'glass rounded-3xl p-5 space-y-3' },
+            h('h3', { className: 'text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5' },
+              h('span', { className: 'material-symbols-outlined text-base' }, 'movie'), ' Para Assistir'
+            ),
+            h('div', { className: 'flex flex-wrap gap-2' },
+              QUIZ_OPTIONS.filmes.map(item =>
+                h('button', { key: item, onClick: () => toggleSelection(item, prefFilmes, setPrefFilmes), className: `px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-all ${prefFilmes.includes(item) ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-on-surface-variant'}` }, item)
+              )
+            )
+          ),
+          h('div', { className: 'glass rounded-3xl p-5 space-y-3' },
+            h('h3', { className: 'text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5' },
+              h('span', { className: 'material-symbols-outlined text-base' }, 'restaurant'), ' Para Comer'
+            ),
+            h('div', { className: 'flex flex-wrap gap-2' },
+              QUIZ_OPTIONS.comidas.map(item =>
+                h('button', { key: item, onClick: () => toggleSelection(item, prefComidas, setPrefComidas), className: `px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-all ${prefComidas.includes(item) ? 'bg-secondary/20 border-secondary text-secondary' : 'bg-white/5 border-white/10 text-on-surface-variant'}` }, item)
+              )
+            )
+          ),
+          h('div', { className: 'glass rounded-3xl p-5 space-y-3' },
+            h('h3', { className: 'text-xs font-bold text-tertiary uppercase tracking-wider flex items-center gap-1.5' },
+              h('span', { className: 'material-symbols-outlined text-base' }, 'auto_awesome'), ' Rolê Ideal / Dates'
+            ),
+            h('div', { className: 'flex flex-wrap gap-2' },
+              QUIZ_OPTIONS.dates.map(item =>
+                h('button', { key: item, onClick: () => toggleSelection(item, prefDates, setPrefDates), className: `px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-all ${prefDates.includes(item) ? 'bg-tertiary/20 border-tertiary text-tertiary' : 'bg-white/5 border-white/10 text-on-surface-variant'}` }, item)
+              )
+            )
+          ),
+          h('button', { onClick: salvarQuiz, className: 'w-full py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-bold rounded-2xl primary-glow active:scale-95 transition-all' }, 'Salvar Gostos e Entrar 🚀')
+        ),
+
+        logado && h('div', { className: 'w-full flex flex-col md:flex-row min-h-screen' },
+          h('aside', { className: 'w-72 hidden md:flex flex-col bg-surface-container-lowest/60 backdrop-blur-xl border-r border-white/5 sticky top-0 h-screen z-40 p-6' },
+            h('div', { className: 'flex items-center gap-3 mb-10' },
+              h('div', { className: 'w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center bg-surface-container-high' },
+                h('span', { className: 'material-symbols-outlined text-primary' }, 'local_movies')
+              ),
+              h('h1', { className: 'text-2xl font-bold text-primary tracking-tight' }, 'Cine & Dates')
+            ),
+            h('nav', { className: 'space-y-2' },
+              TABS.map(t =>
+                h('button', { key: t.id, onClick: () => setAba(t.id), className: `w-full flex items-center gap-4 px-4 py-3 rounded-2xl font-semibold transition-all ${aba === t.id ? 'bg-primary-container/20 text-primary border border-primary/20' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5'}` },
+                  h('span', { className: `material-symbols-outlined ${aba === t.id ? 'filled' : ''}` }, t.icon),
+                  h('span', { className: 'text-sm' }, t.label)
+                )
+              )
+            ),
+            h('div', { className: 'mt-auto border-t border-white/5 pt-4' },
+              h('div', { className: 'glass rounded-2xl p-4 flex items-center justify-between' },
+                h('div', null,
+                  h('p', { className: 'text-sm font-semibold text-on-surface' }, nomeUsuario),
+                  h('p', { className: 'text-xs text-on-surface-variant' }, codigoCasal || 'Sem par')
+                ),
+                h('button', { onClick: () => setLogado(false), className: 'text-on-surface-variant hover:text-secondary' },
+                  h('span', { className: 'material-symbols-outlined' }, 'logout')
+                )
+              )
+            )
+          ),
+
+          h('div', { className: 'flex-1 flex flex-col items-center' },
+            h('header', { className: 'md:hidden w-full bg-surface-container/70 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-6 py-4 sticky top-0 z-40' },
+              h('div', null,
+                h('h1', { className: 'text-lg font-bold text-primary' }, 'Cine & Dates'),
+                h('p', { className: 'text-[10px] text-on-surface-variant' }, `${nomeUsuario} ${codigoCasal ? `· ${codigoCasal}` : ''}`)
+              ),
+              h('button', { onClick: () => setLogado(false), className: 'text-on-surface-variant hover:text-secondary text-xs flex items-center gap-1' },
+                h('span', { className: 'material-symbols-outlined text-base' }, 'logout')
+              )
+            ),
+
+            h('main', { className: 'w-full max-w-md md:max-w-3xl p-6 pb-28 md:pb-12 flex-1 flex flex-col' },
+              aba === 'match' && h('div', { className: 'space-y-6' },
+                h('div', { className: 'glass rounded-3xl p-6 flex items-center justify-between relative overflow-hidden' },
+                  h('div', { className: 'flex flex-col gap-1' },
+                    h('p', { className: 'text-xs text-on-surface-variant uppercase tracking-widest font-semibold' }, 'Status de Conexão'),
+                    h('p', { className: 'text-2xl font-bold text-secondary' }, dadosParceiro ? `${nomeUsuario} & ${nomeParceiro}` : 'Sem Par Conectado')
+                  ),
+                  h('div', { className: 'flex -space-x-3' },
+                    h('div', { className: 'w-12 h-12 rounded-full border-2 border-background bg-surface-container-high flex items-center justify-center ring-2 ring-secondary/40 rose-glow' },
+                      h('span', { className: 'material-symbols-outlined text-secondary filled' }, 'favorite')
+                    )
+                  )
+                ),
+                !dadosParceiro ? h('div', { className: 'p-8 text-center text-on-surface-variant text-sm border border-dashed border-white/10 rounded-3xl glass' },
+                  'Nenhum parceiro vinculado ainda.', h('br'), 'Acesse a aba ', h('b', null, 'Nosso Par'), ' para conectar seus perfis!'
+                ) : h('div', { className: 'space-y-6' },
+                  h('div', null,
+                    h('h3', { className: 'text-xs font-bold text-primary uppercase tracking-wider mb-3 flex items-center gap-2' },
+                      h('span', { className: 'material-symbols-outlined text-base' }, 'movie'), ' O que assistir hoje?'
+                    ),
+                    h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-3' },
+                      calcularMatches(prefFilmes, dadosParceiro.filmes).length > 0 ?
+                        calcularMatches(prefFilmes, dadosParceiro.filmes).map(f =>
+                          h('div', { key: f, className: 'p-4 glass glass-hover rounded-2xl text-sm font-semibold flex items-center gap-3 border-l-4 border-l-primary' },
+                            h('span', { className: 'material-symbols-outlined text-primary filled' }, 'check_circle'), f
+                          )
+                        ) : h('p', { className: 'text-xs text-on-surface-variant col-span-2' }, 'Nenhum filme em comum selecionado ainda.')
+                    )
+                  ),
+                  h('div', null,
+                    h('h3', { className: 'text-xs font-bold text-secondary uppercase tracking-wider mb-3 flex items-center gap-2' },
+                      h('span', { className: 'material-symbols-outlined text-base' }, 'restaurant'), ' O que pedir para comer?'
+                    ),
+                    h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-3' },
+                      calcularMatches(prefComidas, dadosParceiro.comidas).length > 0 ?
+                        calcularMatches(prefComidas, dadosParceiro.comidas).map(c =>
+                          h('div', { key: c, className: 'p-4 glass glass-hover rounded-2xl text-sm font-semibold flex items-center gap-3 border-l-4 border-l-secondary' },
+                            h('span', { className: 'material-symbols-outlined text-secondary filled' }, 'local_fire_department'), c
+                          )
+                        ) : h('p', { className: 'text-xs text-on-surface-variant col-span-2' }, 'Nenhuma comida em comum selecionada ainda.')
+                    )
+                  ),
+                  h('div', null,
+                    h('h3', { className: 'text-xs font-bold text-tertiary uppercase tracking-wider mb-3 flex items-center gap-2' },
+                      h('span', { className: 'material-symbols-outlined text-base' }, 'auto_awesome'), ' Próximo Date'
+                    ),
+                    h('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-3' },
+                      calcularMatches(prefDates, dadosParceiro.dates).length > 0 ?
+                        calcularMatches(prefDates, dadosParceiro.dates).map(d =>
+                          h('div', { key: d, className: 'p-4 glass glass-hover rounded-2xl text-sm font-semibold flex items-center gap-3 border-l-4 border-l-tertiary' },
+                            h('span', { className: 'material-symbols-outlined text-tertiary filled' }, 'location_on'), d
+                          )
+                        ) : h('p', { className: 'text-xs text-on-surface-variant col-span-2' }, 'Nenhum date em comum selecionado ainda.')
+                    )
+                  )
+                )
+              ),
+
+              aba === 'chat' && h('div', { className: 'flex flex-col flex-1 h-[70vh] md:h-[65vh] glass rounded-3xl p-4 overflow-hidden' },
+                h('div', { className: 'border-b border-white/10 pb-3 mb-3 flex items-center justify-between' },
+                  h('h3', { className: 'text-sm font-bold text-primary flex items-center gap-2' },
+                    h('span', { className: 'material-symbols-outlined text-base' }, 'chat'), ' Recados do Casal'
+                  ),
+                  h('span', { className: 'text-xs text-on-surface-variant' }, nomeParceiro ? `Com ${nomeParceiro}` : 'Modo Privado')
+                ),
+                h('div', { ref: chatScrollRef, className: 'flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin' },
+                  !codigoCasal ? h('div', { className: 'text-center text-xs text-on-surface-variant py-10' }, 'Conecte-se com seu par na aba "Nosso Par" para conversar!') :
+                  mensagens.length === 0 ? h('div', { className: 'text-center text-xs text-on-surface-variant py-10' }, 'Nenhuma mensagem ainda. Deixe um recado carinhoso!') :
+                  mensagens.map((msg, index) => {
+                    const meuMsg = msg.remetente === email.trim().toLowerCase();
+                    return h('div', { key: index, className: `flex flex-col ${meuMsg ? 'items-end' : 'items-start'}` },
+                      h('span', { className: 'text-[10px] text-on-surface-variant mb-1 px-1' }, msg.nome_remetente),
+                      h('div', { className: `max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${meuMsg ? 'bg-primary text-on-primary-container rounded-tr-none' : 'bg-surface-variant text-on-surface rounded-tl-none'}` },
+                        msg.mensagem
+                      )
+                    );
+                  })
+                ),
+                codigoCasal && h('div', { className: 'pt-3 mt-3 border-t border-white/10 flex gap-2' },
+                  h('input', { className: 'flex-1 px-4 py-3 bg-surface-container-lowest border border-white/10 rounded-2xl text-on-surface focus:outline-none focus:border-primary text-sm', placeholder: 'Escreva um recado...', value: novaMensagem, onChange: e => setNovaMensagem(e.target.value), onKeyDown: e => e.key === 'Enter' && enviarMensagem() }),
+                  h('button', { onClick: enviarMensagem, className: 'px-5 py-3 bg-primary text-on-primary-container font-bold rounded-2xl primary-glow active:scale-95 transition-all flex items-center justify-center' },
+                    h('span', { className: 'material-symbols-outlined text-base' }, 'send')
+                  )
+                )
+              ),
+
+              aba === 'filmes' && h('div', { className: 'space-y-4' },
+                h('h2', { className: 'text-2xl font-semibold text-on-surface mb-2' }, 'Suas Opções de Filmes'),
+                h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3' },
+                  QUIZ_OPTIONS.filmes.map(item =>
+                    h('button', { key: item, onClick: () => toggleSelection(item, prefFilmes, setPrefFilmes), className: `p-4 rounded-2xl text-left text-sm font-semibold border transition-all ${prefFilmes.includes(item) ? 'bg-primary/20 border-primary text-primary' : 'glass border-white/10 text-on-surface-variant'}` }, item)
+                  )
+                ),
+                h('button', { onClick: salvarQuiz, className: 'mt-4 w-full py-3 bg-primary text-on-primary-container font-bold rounded-2xl primary-glow' }, 'Atualizar Preferências')
+              ),
+
+              aba === 'comidas' && h('div', { className: 'space-y-4' },
+                h('h2', { className: 'text-2xl font-semibold text-on-surface mb-2' }, 'Suas Opções de Comida'),
+                h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3' },
+                  QUIZ_OPTIONS.comidas.map(item =>
+                    h('button', { key: item, onClick: () => toggleSelection(item, prefComidas, setPrefComidas), className: `p-4 rounded-2xl text-left text-sm font-semibold border transition-all ${prefComidas.includes(item) ? 'bg-secondary/20 border-secondary text-secondary' : 'glass border-white/10 text-on-surface-variant'}` }, item)
+                  )
+                ),
+                h('button', { onClick: salvarQuiz, className: 'mt-4 w-full py-3 bg-secondary text-on-secondary-container font-bold rounded-2xl rose-glow' }, 'Atualizar Preferências')
+              ),
+
+              aba === 'dates' && h('div', { className: 'space-y-4' },
+                h('h2', { className: 'text-2xl font-semibold text-on-surface mb-2' }, 'Suas Opções de Dates'),
+                h('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3' },
+                  QUIZ_OPTIONS.dates.map(item =>
+                    h('button', { key: item, onClick: () => toggleSelection(item, prefDates, setPrefDates), className: `p-4 rounded-2xl text-left text-sm font-semibold border transition-all ${prefDates.includes(item) ? 'bg-tertiary/20 border-tertiary text-tertiary' : 'glass border-white/10 text-on-surface-variant'}` }, item)
+                  )
+                ),
+                h('button', { onClick: salvarQuiz, className: 'mt-4 w-full py-3 bg-tertiary text-on-tertiary-container font-bold rounded-2xl' }, 'Atualizar Preferências')
+              ),
+
+              aba === 'conexao' && h('div', { className: 'space-y-6' },
+                h('div', { className: 'glass rounded-3xl p-6 space-y-4' },
+                  h('h3', { className: 'text-lg font-bold text-primary' }, '1. Criar um Código de Casal'),
+                  h('p', { className: 'text-xs text-on-surface-variant' }, 'Gere um código único e envie para seu parceiro(a) se conectar a você.'),
+                  codigoCasal ? h('div', { className: 'p-4 bg-surface-container-lowest rounded-2xl border border-primary/30 text-center' },
+                    h('span', { className: 'text-xs text-on-surface-variant block' }, 'Seu código ativo:'),
+                    h('span', { className: 'text-2xl font-black text-primary tracking-widest' }, codigoCasal)
+                  ) : h('button', { onClick: gerarCodigoCasal, className: 'w-full py-3 bg-primary text-on-primary-container font-bold rounded-2xl primary-glow' }, 'Gerar Código de Casal')
+                ),
+                h('div', { className: 'glass rounded-3xl p-6 space-y-4' },
+                  h('h3', { className: 'text-lg font-bold text-secondary' }, '2. Vincular com Código Existente'),
+                  h('p', { className: 'text-xs text-on-surface-variant' }, 'Se o seu parceiro já gerou um código, insira-o abaixo:'),
+                  h('input', { className: 'w-full px-4 py-3 rounded-2xl bg-surface-container-lowest border border-white/10 text-on-surface uppercase tracking-wider focus:outline-none focus:border-secondary', placeholder: 'Ex: AMOR-1234', value: codigoInput, onChange: e => setCodigoInput(e.target.value) }),
+                  h('button', { onClick: vincular, className: 'w-full py-3 bg-secondary text-on-secondary-container font-bold rounded-2xl rose-glow' }, 'Conectar Perfil')
+                )
+              )
+            ),
+
+            h('nav', { className: 'md:hidden fixed bottom-0 left-0 right-0 bg-surface-container/90 backdrop-blur-2xl border-t border-white/10 px-4 py-2 flex justify-around z-50' },
+              TABS.map(t =>
+                h('button', { key: t.id, onClick: () => setAba(t.id), className: `flex flex-col items-center gap-1 p-2 transition-all ${aba === t.id ? 'text-primary scale-105' : 'text-on-surface-variant'}` },
+                  h('span', { className: `material-symbols-outlined text-xl ${aba === t.id ? 'filled' : ''}` }, t.icon),
+                  h('span', { className: 'text-[10px] font-semibold' }, t.label)
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(h(App));
+  </script>
+</body>
 </html>
